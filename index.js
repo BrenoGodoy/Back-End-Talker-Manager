@@ -1,5 +1,6 @@
 const express = require('express');
 const bodyParser = require('body-parser');
+const people = require('./talker.json');
 
 const app = express();
 app.use(bodyParser.json());
@@ -12,8 +13,17 @@ app.get('/', (_request, response) => {
   response.status(HTTP_OK_STATUS).send();
 });
 
+app.get('/talker', (req, res, next) => {
+  if (people === '[]') {
+    return res.status(200).send([]);
+  }
+
+  next();
+}, 
+(req, res) => {
+  res.status(200).json(people);
+});
+
 app.listen(PORT, () => {
   console.log('Online');
 });
-
-// Começando o Projeto :)
