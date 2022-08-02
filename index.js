@@ -14,7 +14,6 @@ const verifyEmpty = async (req, res, next) => {
   if (!parsedData) return res.status(200).json([]);
   next();
 };
-
 const verifyId = async (req, res, next) => {
   const { id } = req.params;
   const data = await fs.readFile(mainFile);
@@ -23,6 +22,18 @@ const verifyId = async (req, res, next) => {
 
   if (!people) return res.status(404).json({ message: 'Pessoa palestrante não encontrada' });
   next();
+};
+
+// https://www.delftstack.com/pt/howto/javascript/javascript-random-string/
+const generateRandomString = (num) => {
+  const characters = 'ABCDEFGHIJKLMNOPQRSTUVWXYZabcdefghijklmnopqrstuvwxyz0123456789';
+  let result1 = '';
+  const charactersLength = characters.length;
+  for (let i = 0; i < num; i += 1) {
+      result1 += characters.charAt(Math.floor(Math.random() * charactersLength));
+  }
+
+  return result1;
 };
 
 // não remova esse endpoint, e para o avaliador funcionar
@@ -42,6 +53,14 @@ app.get('/talker/:id', verifyId, async (req, res) => {
   const parsedData = JSON.parse(data);
   const people = parsedData.find((p) => p.id === Number(id));
   res.status(200).json(people);
+});
+
+app.post('/login', (req, res) => {
+  const { email, password } = req.body;
+  const login = { email, password };
+  console.log(login);
+  const token = generateRandomString(16);
+  res.status(200).json({ token });
 });
 
 app.listen(PORT, () => {
