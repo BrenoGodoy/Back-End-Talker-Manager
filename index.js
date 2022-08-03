@@ -86,7 +86,6 @@ const verifyPeopleToAdd3 = (req, res, next) => {
   const { talk } = req.body;
   const regex = new RegExp(/\w\w\/\w\w\/\w\w\w\w/);
 
-  console.log(regex.test(talk.watchedAt));
   if (!regex.test(talk.watchedAt)) {
     return res.status(400)
     .json({ message: 'O campo "watchedAt" deve ter o formato "dd/mm/aaaa"' });
@@ -101,6 +100,16 @@ const verifyPeopleToAdd3 = (req, res, next) => {
 };
 
 // fim dos Middlewares PeopleToAdd
+
+const queryValidation = async (req, res, next) => {
+  const { q } = req.query;
+  const data = await fs.readFile(mainFile);
+  const parsedData = JSON.parse(data);
+  if (!q) {
+    return res.status(200).json(parsedData);
+  }
+  next();
+};
 
 // https://www.delftstack.com/pt/howto/javascript/javascript-random-string/
 const generateRandomString = (num) => {
@@ -118,6 +127,16 @@ const generateRandomString = (num) => {
 // não remova esse endpoint, e para o avaliador funcionar
 app.get('/', (_request, response) => {
   response.status(HTTP_OK_STATUS).send();
+});
+
+app.get('/talker/search', tokenValidation, queryValidation, async (req, res) => {
+  const { q } = req.query;
+  const data = await fs.readFile(mainFile);
+  const parsedData = JSON.parse(data);
+  const newData = parsedData.filter((p) => p.name.includes(q));
+  if (newData.length === 0) return res.status(200).json([]);
+
+  res.status(200).json(newData);
 });
 
 app.get('/talker', verifyEmpty, async (req, res) => {
