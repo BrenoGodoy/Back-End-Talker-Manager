@@ -47,14 +47,19 @@ const verifyLogin = async (req, res, next) => {
   next();
 };
 
-// Middlewares PeopleToAdd
-
-const verifyPeopleToAdd1 = (req, res, next) => {
+const tokenValidation = (req, res, next) => {
   const { authorization } = req.headers;
-  const { name } = req.body;
 
   if (!authorization) return res.status(401).json({ message: 'Token não encontrado' });
   if (authorization.length !== 16) return res.status(401).json({ message: 'Token inválido' });
+  next();
+};
+
+// Middlewares PeopleToAdd
+
+const verifyPeopleToAdd1 = (req, res, next) => {
+  const { name } = req.body;
+
   if (!name) return res.status(400).json({ message: 'O campo "name" é obrigatório' });
   if (name.length < 3) {
     return res.status(400).json({ message: 'O "name" deve ter pelo menos 3 caracteres' }); 
@@ -130,7 +135,7 @@ app.get('/talker/:id', verifyId, async (req, res) => {
 });
 
 app.post('/talker', 
-[verifyPeopleToAdd1, verifyPeopleToAdd2, verifyPeopleToAdd3], async (req, res) => {
+[tokenValidation, verifyPeopleToAdd1, verifyPeopleToAdd2, verifyPeopleToAdd3], async (req, res) => {
   const { name, age, talk } = req.body;
   const data = await fs.readFile(mainFile);
   const parsedData = JSON.parse(data);
@@ -143,7 +148,7 @@ app.post('/talker',
 });
 
 app.put('/talker/:id', 
-[verifyPeopleToAdd1, verifyPeopleToAdd2, verifyPeopleToAdd3], async (req, res) => {
+[tokenValidation, verifyPeopleToAdd1, verifyPeopleToAdd2, verifyPeopleToAdd3], async (req, res) => {
   const { id } = req.params;
   const { name, age, talk } = req.body;
   const data = await fs.readFile(mainFile);
