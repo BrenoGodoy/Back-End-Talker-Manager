@@ -8,12 +8,15 @@ app.use(bodyParser.json());
 const HTTP_OK_STATUS = 200;
 const PORT = '3000';
 const mainFile = './talker.json';
+
+// midllewares e funções
 const verifyEmpty = async (req, res, next) => {
   const data = await fs.readFile(mainFile);
   const parsedData = JSON.parse(data);
   if (!parsedData) return res.status(200).json([]);
   next();
 };
+
 const verifyId = async (req, res, next) => {
   const { id } = req.params;
   const data = await fs.readFile(mainFile);
@@ -21,6 +24,26 @@ const verifyId = async (req, res, next) => {
   const people = parsedData.find((p) => p.id === Number(id));
 
   if (!people) return res.status(404).json({ message: 'Pessoa palestrante não encontrada' });
+  next();
+};
+
+const verifyLogin = async (req, res, next) => {
+  const validateEmail = (email) => {
+    // Utilização do newRegex: https://stackabuse.com/validate-email-addresses-with-regular-expressions-in-javascript/
+    const regex = new RegExp('[a-z0-9]+@[a-z]+[a-z]{2,3}');
+    return regex.test(email);
+  };
+
+  const { email, password } = req.body;
+  if (!email) {
+    return res.status(400).json({ message: 'O campo "email" é obrigatório' });
+  } if (!validateEmail(email)) {
+      return res.status(400).json({ message: 'O "email" deve ter o formato "email@email.com"' });
+  } if (!password) {
+    return res.status(400).json({ message: 'O campo "password" é obrigatório' });
+  } if (password.length <= 6) {
+    return res.status(400).json({ message: 'O "password" deve ter pelo menos 6 caracteres' });
+  }
   next();
 };
 
@@ -36,6 +59,7 @@ const generateRandomString = (num) => {
   return result1;
 };
 
+// Começo das chamadas aos métodos
 // não remova esse endpoint, e para o avaliador funcionar
 app.get('/', (_request, response) => {
   response.status(HTTP_OK_STATUS).send();
@@ -55,7 +79,7 @@ app.get('/talker/:id', verifyId, async (req, res) => {
   res.status(200).json(people);
 });
 
-app.post('/login', (req, res) => {
+app.post('/login', verifyLogin, (req, res) => {
   const { email, password } = req.body;
   const login = { email, password };
   console.log(login);
