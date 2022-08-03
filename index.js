@@ -161,6 +161,17 @@ app.put('/talker/:id',
   res.status(200).json(parsedData[peopleIndex]);
 });
 
+app.delete('/talker/:id', tokenValidation, async (req, res) => {
+  const { id } = req.params;
+  const data = await fs.readFile(mainFile);
+  const parsedData = JSON.parse(data);
+  const peopleIndex = parsedData.findIndex((p) => p.id === Number(id));
+
+  parsedData.splice(peopleIndex, 1);
+  await fs.writeFile('./talker.json', JSON.stringify(parsedData));
+  res.status(204).end();
+});
+
 app.post('/login', verifyLogin, (req, res) => {
   const { email, password } = req.body;
   const login = { email, password };
