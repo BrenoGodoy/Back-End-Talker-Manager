@@ -86,7 +86,9 @@ const verifyPeopleToAdd3 = (req, res, next) => {
     return res.status(400)
     .json({ message: 'O campo "watchedAt" deve ter o formato "dd/mm/aaaa"' });
   }
-  if (!talk.rate) return res.status(400).json({ message: 'O campo "rate" é obrigatório' });
+  if (talk.rate === undefined) {
+    return res.status(400).json({ message: 'O campo "rate" é obrigatório' });
+  }
   if (talk.rate < 1 || talk.rate > 5) {
     return res.status(400).json({ message: 'O campo "rate" deve ser um inteiro de 1 à 5' });
   }
@@ -138,6 +140,20 @@ app.post('/talker',
   const newData = [...parsedData, peopleToAdd];
   await fs.writeFile('./talker.json', JSON.stringify(newData));
   res.status(201).json(peopleToAdd); 
+});
+
+app.put('/talker/:id', 
+[verifyPeopleToAdd1, verifyPeopleToAdd2, verifyPeopleToAdd3], async (req, res) => {
+  const { id } = req.params;
+  const { name, age, talk } = req.body;
+  const data = await fs.readFile(mainFile);
+  const parsedData = JSON.parse(data);
+  const peopleIndex = parsedData.findIndex((p) => p.id === Number(id));
+  const peopleId = peopleIndex + 1;
+
+  parsedData[peopleIndex] = { id: peopleId, name, age, talk };
+  await fs.writeFile('./talker.json', JSON.stringify(parsedData));
+  res.status(200).json(parsedData[peopleIndex]);
 });
 
 app.post('/login', verifyLogin, (req, res) => {
